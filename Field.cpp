@@ -138,4 +138,63 @@ void Field::setField(){
     setTileInfo(4, 15, 0b1101);
     setTileInfo(9, 15, 0b1110);
     setTileInfo(10, 15, 0b0101);
+
+    for(SMALLTYPE i = 0 ; i < 16 ; i++){
+        setTileInfo(i, 0, (getTileInfo(i, 0) & 0x07)); // disable UP for y = 0
+        setTileInfo(i, 15, (getTileInfo(i, 15) & 0x0B)); // disable DN for y = 15
+        setTileInfo(0, i, (getTileInfo(0, i) & 0x0D)); // disable LEFT for x = 0
+        setTileInfo(15, i, (getTileInfo(15, i) & 0xE)); // disable RIGHT for y = 15
+    }
+}
+
+
+SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos){
+    SMALLTYPE* distanceArr;
+    distanceArr = (SMALLTYPE*) malloc(sizeof(SMALLTYPE) * 256);
+    for(uint16_t i = 0 ; i < 256 ; i++) distanceArr[i] = 0xFF;
+    printf("GETTING DISTANCE\n");
+    getDistance(curField, ((pos >> 4) & 0x0F), (pos & 0x0F), distanceArr, 0);
+    printf("POS : (%u, %u)\n",((pos >> 4) & 0x0F), (pos & 0x0F));
+    distanceArr[(((pos >> 4) & 0x0F) + (15 * (pos & 0x0F)))] = 0;
+
+    for(SMALLTYPE i = 0 ; i < 16 ; i++){
+        for(SMALLTYPE j = 0 ; j < 15 ; j++)
+            printf("%3u ", distanceArr[15 * i + j]);
+        printf("\n");
+    }
+    return distanceArr;
+}
+
+void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance){
+    if ((curField.getTileInfo(x, y) & 0x08) == 0x08) goDirection(curField, x, y - 1, distanceARR, distance + 1, 0x08);
+    if ((curField.getTileInfo(x, y) & 0x04) == 0x04) goDirection(curField, x, y + 1, distanceARR, distance + 1, 0x04);
+    if ((curField.getTileInfo(x, y) & 0x02) == 0x02) goDirection(curField, x - 1, y, distanceARR, distance + 1, 0x02);
+    if ((curField.getTileInfo(x, y) & 0x01) == 0x01) goDirection(curField, x + 1, y, distanceARR, distance + 1, 0x01);
+}
+
+void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance, SMALLTYPE direction){
+    if ((curField.getTileInfo(x, y) & direction) != direction) { // if not able to move into the direction anymore;
+        if (distanceARR[15 * y + x] > distance){
+            distanceARR[15 * y + x] = distance; // do relaxation
+            getDistance(curField, x, y, distanceARR, distance);
+        }
+        else{
+            return;
+        }
+    }
+    else{
+        switch (direction) {
+            case 0x08:
+                goDirection(curField, x, y - 1, distanceARR, distance, direction);
+                break;
+            case 0x04:
+                goDirection(curField, x, y + 1, distanceARR, distance, direction);
+                break;
+            case 0x02:
+                goDirection(curField, x - 1, y, distanceARR, distance, direction);
+                break;
+            case 0x01:
+                goDirection(curField, x + 1, y, distanceARR, distance, direction);
+        }
+    }
 }

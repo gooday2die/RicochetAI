@@ -7,6 +7,8 @@
 
 #endif //RICOCHETAI_FIELD_H
 
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -37,3 +39,7 @@ public:
     void printField();
     void setField();
 };
+
+SMALLTYPE* getDistanceFrom(Field, SMALLTYPE);
+void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE);
+void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE);

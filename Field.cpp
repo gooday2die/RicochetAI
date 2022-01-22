@@ -147,7 +147,93 @@ void Field::setField(){
     }
 }
 
+/**
+ * A function that finds route from starting point to end point.
+ * Used too much bitwise operation so it's kind of messy
+ * @param curField current field
+ * @param SPpos the starting position coordinate
+ * @param EPpos the ending position coordinate
+ */
+void findPathFromTo(Field curField, SMALLTYPE SPpos, SMALLTYPE EPpos){
+    SMALLTYPE* distanceArr;
+    distanceArr = getDistanceFrom(curField, SPpos);
+    printf("SP : (%d, %d) --> EP : (%d, %d)\n", (SPpos >> 4) & 0x0F, (SPpos & 0x0F), (EPpos >> 4) & 0x0F, (EPpos & 0x0F));
+    if(distanceArr[(EPpos & 0x0F) * 16 + ((EPpos >> 4) & 0x0F)] != 255){
+        printf("Can reach path. Distance : %d\n", distanceArr[(EPpos & 0x0F) * 16 + ((EPpos >> 4) & 0x0F)]);
+        SMALLTYPE curPOS = EPpos;
+        SMALLTYPE curDistance = distanceArr[(EPpos & 0x0F) * 16 + ((EPpos >> 4) & 0x0F)];
 
+        while (distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)] != 0){
+            nextIter: // used a very bad expression, goto expression.
+            if ((curField.getTileInfo(((curPOS >> 4) & 0x0F), curPOS & 0x0F) & 0x08) == 0x08) // go up if you can
+                for (SMALLTYPE i = (curPOS & 0x0F) ; i >= 0 ; i--) {
+                    if (((curField.getTileInfo((curPOS >> 4) & 0x0F, i) & 0x08) == 0) || (distanceArr[i * 16 + ((curPOS >> 4) & 0x0F)] == (curDistance - 1))){
+                        if (distanceArr[i * 16 + ((curPOS >> 4) & 0x0F)] == (curDistance - 1)) {
+                            curPOS = ((curPOS & 0xF0) | (i & 0x0F));
+                            curDistance--;
+                            printf("CUR POS : (%d, %d) , Distance : %d\n", ((curPOS >> 4) & 0x0F), curPOS & 0x0F,
+                                   distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)]);
+                            goto nextIter;
+                        }
+                        else break;
+                    }
+                }
+            if ((curField.getTileInfo(((curPOS >> 4) & 0x0F), curPOS & 0x0F) & 0x04) == 0x04) // go dn if you can
+                for (SMALLTYPE i = (curPOS & 0x0F) ; i < 16 ; i++) {
+                    if (((curField.getTileInfo((curPOS >> 4) & 0x0F, i) & 0x04) == 0) || (distanceArr[i * 16 + ((curPOS >> 4) & 0x0F)] == (curDistance - 1))){
+                        if (distanceArr[i * 16 + ((curPOS >> 4) & 0x0F)] == (curDistance - 1)) {
+                            curPOS = ((curPOS & 0xF0) | (i & 0x0F));
+                            curDistance--;
+                            printf("CUR POS : (%d, %d) , Distance : %d\n", ((curPOS >> 4) & 0x0F), curPOS & 0x0F,
+                                   distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)]);
+                            goto nextIter;
+
+                        }
+                        else break;
+                    }
+                }
+
+            if ((curField.getTileInfo(((curPOS >> 4) & 0x0F), curPOS & 0x0F) & 0x02) == 0x02) // go l if you can
+                for (SMALLTYPE i = ((curPOS >> 4) & 0x0F) ; i >= 0 ; i--) {
+                    if ((((curField.getTileInfo(i, curPOS & 0x0F)) & 0x02) == 0) || distanceArr[i + 16 * (curPOS & 0x0F)] == (curDistance - 1)) {
+                        if (distanceArr[i + 16 * (curPOS & 0x0F)] == (curDistance - 1)) {
+                            curPOS = (((i << 4) & 0xF0) | curPOS & 0x0F);
+                            curDistance--;
+                            printf("CUR POS : (%d, %d) , Distance : %d\n", ((curPOS >> 4) & 0x0F), curPOS & 0x0F,
+                                   distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)]);
+                            goto nextIter;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+            if ((curField.getTileInfo(((curPOS >> 4) & 0x0F), curPOS & 0x0F) & 0x01) == 0x01) // go r if you can
+                for (SMALLTYPE i = ((curPOS >> 4) & 0x0F) ; i < 16 ; i++) {
+                    if (((curField.getTileInfo(i, curPOS & 0x0F) & 0x01) == 0) || (distanceArr[i + 16 * (curPOS & 0x0F)] == (curDistance - 1))){
+                        if (distanceArr[i + 16 * (curPOS & 0x0F)] == (curDistance - 1)) {
+                            curPOS = (((i << 4) & 0xF0) | curPOS & 0x0F);
+                            curDistance--;
+                            printf("CUR POS : (%d, %d) , Distance : %d\n", ((curPOS >> 4) & 0x0F), curPOS & 0x0F,
+                                   distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)]);
+                            goto nextIter;
+                        }
+                        else break;
+                    }
+                }
+        }
+    }
+    else{
+        printf("Cannot reach path.\n");
+    }
+}
+
+/**
+ * A function that gets distance from a point
+ * @param curField the field to find distance
+ * @param pos the starting point
+ * @return returns SMALLTYPE array of field that represents the distance. If value is 255, that means unreachable.
+ */
 SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos){
     SMALLTYPE* distanceArr;
     distanceArr = (SMALLTYPE*) malloc(sizeof(SMALLTYPE) * 256);
@@ -155,16 +241,25 @@ SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos){
     printf("GETTING DISTANCE\n");
     getDistance(curField, ((pos >> 4) & 0x0F), (pos & 0x0F), distanceArr, 0);
     printf("POS : (%u, %u)\n",((pos >> 4) & 0x0F), (pos & 0x0F));
-    distanceArr[(((pos >> 4) & 0x0F) + (15 * (pos & 0x0F)))] = 0;
+    distanceArr[(((pos >> 4) & 0x0F) + (16 * (pos & 0x0F)))] = 0;
 
     for(SMALLTYPE i = 0 ; i < 16 ; i++){
-        for(SMALLTYPE j = 0 ; j < 15 ; j++)
-            printf("%3u ", distanceArr[15 * i + j]);
+        for(SMALLTYPE j = 0 ; j < 16 ; j++)
+            printf("%3u ", distanceArr[16 * i + j]);
         printf("\n");
     }
     return distanceArr;
 }
 
+/**
+ * A function that calls goDirection function to every direction when hitting a wall.
+ * Checks in UP, DN, LEFT, RIGHT order
+ * @param curField current field
+ * @param x current x pos
+ * @param y current y pos
+ * @param distanceARR distance array
+ * @param distance current distance
+ */
 void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance){
     if ((curField.getTileInfo(x, y) & 0x08) == 0x08) goDirection(curField, x, y - 1, distanceARR, distance + 1, 0x08);
     if ((curField.getTileInfo(x, y) & 0x04) == 0x04) goDirection(curField, x, y + 1, distanceARR, distance + 1, 0x04);
@@ -172,10 +267,23 @@ void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceAR
     if ((curField.getTileInfo(x, y) & 0x01) == 0x01) goDirection(curField, x + 1, y, distanceARR, distance + 1, 0x01);
 }
 
+/**
+ * A function that goes into a specific direction.
+ * 0x08 -> UP
+ * 0x04 -> DN
+ * 0x02 -> LEFT
+ * 0x01 -> RIGHT
+ * @param curField current Field
+ * @param x current x pos
+ * @param y current y pos
+ * @param distanceARR distance array
+ * @param distance current distance
+ * @param direction direction in hex format
+ */
 void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance, SMALLTYPE direction){
     if ((curField.getTileInfo(x, y) & direction) != direction) { // if not able to move into the direction anymore;
-        if (distanceARR[15 * y + x] > distance){
-            distanceARR[15 * y + x] = distance; // do relaxation
+        if (distanceARR[16 * y + x] > distance){
+            distanceARR[16 * y + x] = distance; // do relaxation
             getDistance(curField, x, y, distanceARR, distance);
         }
         else{
@@ -184,16 +292,16 @@ void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceAR
     }
     else{
         switch (direction) {
-            case 0x08:
+            case 0x08: // up
                 goDirection(curField, x, y - 1, distanceARR, distance, direction);
                 break;
-            case 0x04:
+            case 0x04: // dn
                 goDirection(curField, x, y + 1, distanceARR, distance, direction);
                 break;
-            case 0x02:
+            case 0x02: // left
                 goDirection(curField, x - 1, y, distanceARR, distance, direction);
                 break;
-            case 0x01:
+            case 0x01: // right
                 goDirection(curField, x + 1, y, distanceARR, distance, direction);
         }
     }

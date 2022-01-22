@@ -43,3 +43,4 @@ public:
 SMALLTYPE* getDistanceFrom(Field, SMALLTYPE);
 void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE);
 void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE);
+void findPathFromTo(Field, SMALLTYPE, SMALLTYPE);

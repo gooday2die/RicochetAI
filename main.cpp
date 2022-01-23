@@ -1,14 +1,27 @@
 #include <iostream>
 #include "Field.h"
-#include "Robot.h"
 
 int main() {
     Field allField = Field();
     allField.setField();
     allField.printField();
 
-    findPathFromTo(allField, 0xF5, 0x37);
-    //getDistanceFrom(allField, 0x36);
-    //getDistanceFrom(allField, 0x94);
-
+    Field newField;
+    /**
+    newField = allField.moveRobot(0, 0x08);
+    newField.printField();
+    newField = allField.moveRobot(0, 0x01);
+    newField.printField();
+    newField = newField.moveRobot(0, 0x04);
+    newField.printField();
+    newField = newField.moveRobot(0, 0x01);
+    newField.printField();
+    */
+    newField = allField.moveRobot(0, 0x04);
+    newField.printField();
+    findPathFromTo(newField, 0xF5, 0x37);
+    printf("===========================\n\n\n");
+    newField = allField.moveRobot(0, 0x08);
+    newField.printField();
+    findPathFromTo(newField, 0xF5, 0x37);
 }

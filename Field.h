@@ -27,17 +27,21 @@
 class Field{
 private:
     SMALLTYPE* fieldArray;
+    SMALLTYPE* robotArray;
 public:
     Field(){
         fieldArray = (SMALLTYPE*) malloc(sizeof (SMALLTYPE) * 128);
-        for (SMALLTYPE i = 0 ; i < 128 ; i++){
-            fieldArray[i] = 0xFF;
-        }
+        for (SMALLTYPE i = 0 ; i < 128 ; i++) fieldArray[i] = 0xFF;
+        robotArray = (SMALLTYPE*)malloc(sizeof(SMALLTYPE) * 4);
+        for (SMALLTYPE i = 0 ; i < 4 ; i++) robotArray[i] = 0x00;
+        setField();
     }
     SMALLTYPE getTileInfo(SMALLTYPE, SMALLTYPE);
     void setTileInfo(SMALLTYPE, SMALLTYPE, SMALLTYPE);
     void printField();
     void setField();
+    Field moveRobot(SMALLTYPE, SMALLTYPE);
+    void setRobot(SMALLTYPE, SMALLTYPE);
 };
 
 SMALLTYPE* getDistanceFrom(Field, SMALLTYPE);

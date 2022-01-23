@@ -40,6 +40,69 @@ void Field::printField(){
 }
 
 /**
+ * A member function that moves a specific robot into a direction
+ * Directions:
+ * 0x08 -> UP
+ * 0x04 -> DN
+ * 0x02 -> LEFT
+ * 0x01 -> RIGHT
+ * @param robotIndex the robot index to move
+ * @param direction the direction.
+ * @return returns field after robot has been moved;
+ */
+Field Field::moveRobot(SMALLTYPE robotIndex, SMALLTYPE direction) {
+    printf("MOVING ROBOT %d into %u direction\n", robotIndex, direction);
+    SMALLTYPE curPOS = robotArray[robotIndex];
+    Field newField; // An empty new Field.
+    while(((getTileInfo((curPOS >> 4) & 0x0F, curPOS & 0x0F) & direction) == direction) || (robotArray[robotIndex] == curPOS)){
+        // keep moving towards that direction when robot can.
+        switch (direction) {
+            case 0x08: // go up
+                curPOS = ((curPOS & 0xF0) | (0x0F & ((curPOS & 0x0F) - 1)));
+                break;
+            case 0x04: //  go down
+                curPOS = ((curPOS & 0xF0) | (0x0F & ((curPOS & 0x0F) + 1)));
+                break;
+            case 0x02: // go left
+                curPOS = (((((curPOS >> 4) & 0x0F) - 1) << 4) & 0xF0) | (curPOS & 0x0F);
+                break;
+            case 0x01: // go right
+                curPOS = (((((curPOS >> 4) & 0x0F) + 1) << 4) & 0xF0) | (curPOS & 0x0F);
+                break;
+        }
+    }
+    printf("ROBOT %d : CANNOT MOVE ANYMORE , CURPOS : (%u, %u)\n", robotIndex, (curPOS >> 4) & 0x0F, curPOS & 0x0F);
+    newField.setRobot(robotIndex, curPOS); // set the robot at that position using setRobot
+
+    return newField;
+}
+
+/**
+ * A member function that sets a robot's position at pos
+ * @param robotIndex the robot index to set pos
+ * @param pos the position to set robot at
+ */
+void Field::setRobot(SMALLTYPE robotIndex, SMALLTYPE pos){
+    setTileInfo((pos >> 4) & 0x0F, pos & 0x0F, 0x00); // set that tile not movable.
+
+    if ((pos & 0x0F) < 15)  // check boundary and disable down if possible
+        setTileInfo((pos >> 4) & 0x0F, (pos & 0x0F) + 1,
+                             getTileInfo((pos >> 4) & 0x0F, (pos & 0x0F) + 1) & 0x07);
+
+    if ((pos & 0x0F) >= 1)  // check boundary and disable up if possible
+        setTileInfo((pos >> 4) & 0x0F, (pos & 0x0F) - 1,
+                             getTileInfo((pos >> 4) & 0x0F, (pos & 0x0F) - 1) & 0x0B);
+
+    if (((pos >> 4) & 0x0F) >= 1)  // check boundary and disable right if possible
+        setTileInfo(((pos >> 4) & 0x0F) - 1, pos & 0x0F,
+                             getTileInfo(((pos >> 4) & 0x0F) - 1, pos & 0x0F) & 0x0E);
+
+    if (((pos >> 4) & 0x0F) < 15)  // check boundary and disable left if possible
+        setTileInfo(((pos >> 4) & 0x0F) + 1, pos & 0x0F,
+                             getTileInfo(((pos >> 4) & 0x0F) + 1, pos & 0x0F) & 0x0D);
+}
+
+/**
  * A member function that sets the whole game field.
  * The field is included in /pic directory of the project.
  */

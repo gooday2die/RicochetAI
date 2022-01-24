@@ -25,10 +25,9 @@
  * Also, we are going to store these 256 tiles into a single array called fieldArray.
  */
 class Field{
-private:
+public:
     SMALLTYPE* fieldArray;
     SMALLTYPE* robotArray;
-public:
     Field(){
         fieldArray = (SMALLTYPE*) malloc(sizeof (SMALLTYPE) * 128);
         for (SMALLTYPE i = 0 ; i < 128 ; i++) fieldArray[i] = 0xFF;
@@ -42,9 +41,12 @@ public:
     void setField();
     Field moveRobot(SMALLTYPE, SMALLTYPE);
     void setRobot(SMALLTYPE, SMALLTYPE);
+    Field simulateRobotPos(SMALLTYPE);
 };
 
-SMALLTYPE* getDistanceFrom(Field, SMALLTYPE);
-void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE);
-void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE);
-void findPathFromTo(Field, SMALLTYPE, SMALLTYPE);
+SMALLTYPE* getDistanceFrom(Field, SMALLTYPE, bool);
+void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, bool);
+void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE, bool);
+void findPathFromTo(Field, SMALLTYPE, SMALLTYPE, bool);
+SMALLTYPE cntReachFromTo(Field, SMALLTYPE, SMALLTYPE, bool);
+

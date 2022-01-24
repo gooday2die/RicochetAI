@@ -79,9 +79,10 @@ Field Field::moveRobot(SMALLTYPE robotIndex, SMALLTYPE direction) {
 
 Field Field::simulateRobotPos(SMALLTYPE pos){
     Field newField = Field();
-    newField.fieldArray[0] = this->fieldArray[0];
-    newField.fieldArray[1] = this->fieldArray[1];
-    newField.fieldArray[2] = this->fieldArray[2];
+    for(SMALLTYPE i = 0 ; i < 3 ; i++){
+        newField.fieldArray[i] = this->fieldArray[i];
+        newField.setRobot(i, this->robotArray[i]);
+    }
 
     //newField.setTileInfo((pos >> 4) & 0x0F, pos & 0x0F, 0x00); // set that tile not movable.
 
@@ -335,13 +336,13 @@ SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos, bool isRobot){
     //printf("POS : (%u, %u)\n",((pos >> 4) & 0x0F), (pos & 0x0F));
     distanceArr[(((pos >> 4) & 0x0F) + (16 * (pos & 0x0F)))] = 0;
 
-
+    /**
     for(SMALLTYPE i = 0 ; i < 16 ; i++){
         for(SMALLTYPE j = 0 ; j < 16 ; j++)
             printf("%3u ", distanceArr[16 * i + j]);
         printf("\n");
     }
-
+    */
 
     return distanceArr;
 }

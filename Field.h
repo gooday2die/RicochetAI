@@ -41,12 +41,13 @@ public:
     void setField();
     Field moveRobot(SMALLTYPE, SMALLTYPE);
     void setRobot(SMALLTYPE, SMALLTYPE);
+    Field removeRobot(SMALLTYPE);
     Field simulateRobotPos(SMALLTYPE);
 };
 
-SMALLTYPE* getDistanceFrom(Field, SMALLTYPE, bool);
-void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, bool);
-void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE, bool);
-void findPathFromTo(Field, SMALLTYPE, SMALLTYPE, bool);
-SMALLTYPE cntReachFromTo(Field, SMALLTYPE, SMALLTYPE, bool);
+SMALLTYPE* getDistanceFrom(Field, SMALLTYPE);
+void getDistance(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE);
+void goDirection(Field, SMALLTYPE, SMALLTYPE, SMALLTYPE*, SMALLTYPE, SMALLTYPE);
+void findPathFromTo(Field, SMALLTYPE, SMALLTYPE);
+SMALLTYPE cntReachFromTo(Field, SMALLTYPE, SMALLTYPE);
 

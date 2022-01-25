@@ -20,6 +20,13 @@
 
 #define SMALLTYPE uint8_t
 
+typedef struct movementResult_{
+    SMALLTYPE robotOrder[3];
+    SMALLTYPE robotDestination[3];
+    SMALLTYPE movementCount[3];
+    Field field[3];
+}movementResult;
+
 /**
  * An algorithm class for polymorphism
  */
@@ -52,8 +59,8 @@ public:
     Field curField;
     neighborAlgorithm(){
         curField.setRobot(0, 0xB1);
-        //curField.setRobot(1, 0x81);
-        curField.setRobot(1, 0x45);
+        curField.setRobot(1, 0x81);
+        //curField.setRobot(1, 0x45);
         curField.setRobot(2, 0xE4);
 
         curField.printField();
@@ -65,6 +72,7 @@ public:
     void findPath();
     void findNeighborPath(SMALLTYPE);
     SMALLTYPE placeNeighbors(SMALLTYPE);
+    movementResult findWay(SMALLTYPE, SMALLTYPE, SMALLTYPE);
 };
 
 void runAlgorithm(Algorithm*, SMALLTYPE, SMALLTYPE);

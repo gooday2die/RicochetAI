@@ -238,17 +238,30 @@ void Field::setField(){
     }
 }
 
+
+/**
+ * A member function that returns field with a specific robot removed
+ * @param robotIndex the robot index to remove
+ * @return field without the specific robot.
+ */
+Field Field::removeRobot(SMALLTYPE robotIndex){
+    Field newField = Field();
+    for(SMALLTYPE i = 0 ; i < 3 ; i++)
+        if (i != robotIndex) newField.setRobot(i, robotArray[i]);
+
+    return newField;
+}
 /**
  * A function that finds route from starting point to end point.
  * Used too much bitwise operation so it's kind of messy
  * @param curField current field
  * @param SPpos the starting position coordinate
  * @param EPpos the ending position coordinate
- * @param isRobot if this is is for robot finding ways
+ * @param robotIndex the robot index
  */
-void findPathFromTo(Field curField, SMALLTYPE SPpos, SMALLTYPE EPpos, bool isRobot){
+void findPathFromTo(Field curField, SMALLTYPE SPpos, SMALLTYPE EPpos){
     SMALLTYPE* distanceArr;
-    distanceArr = getDistanceFrom(curField, SPpos, isRobot);
+    distanceArr = getDistanceFrom(curField, SPpos);
     printf("SP : (%d, %d) --> EP : (%d, %d)\n", (SPpos >> 4) & 0x0F, (SPpos & 0x0F), (EPpos >> 4) & 0x0F, (EPpos & 0x0F));
     if(distanceArr[(EPpos & 0x0F) * 16 + ((EPpos >> 4) & 0x0F)] != 255){
         printf("Can reach path. Distance : %d\n", distanceArr[(EPpos & 0x0F) * 16 + ((EPpos >> 4) & 0x0F)]);
@@ -325,24 +338,23 @@ void findPathFromTo(Field curField, SMALLTYPE SPpos, SMALLTYPE EPpos, bool isRob
  * @param curField the field to find distance
  * @param pos the starting point
  * @return returns SMALLTYPE array of field that represents the distance. If value is 255, that means unreachable.
- * @param isRobot if this is is for robot finding ways
  */
-SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos, bool isRobot){
+SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos){
     SMALLTYPE* distanceArr;
     distanceArr = (SMALLTYPE*) malloc(sizeof(SMALLTYPE) * 256);
     for(uint16_t i = 0 ; i < 256 ; i++) distanceArr[i] = 0xFF;
     //printf("GETTING DISTANCE\n");
-    getDistance(curField, ((pos >> 4) & 0x0F), (pos & 0x0F), distanceArr, 0, isRobot);
+    getDistance(curField, ((pos >> 4) & 0x0F), (pos & 0x0F), distanceArr, 0);
     //printf("POS : (%u, %u)\n",((pos >> 4) & 0x0F), (pos & 0x0F));
     distanceArr[(((pos >> 4) & 0x0F) + (16 * (pos & 0x0F)))] = 0;
-
     /**
     for(SMALLTYPE i = 0 ; i < 16 ; i++){
         for(SMALLTYPE j = 0 ; j < 16 ; j++)
             printf("%3u ", distanceArr[16 * i + j]);
         printf("\n");
     }
-    */
+     */
+
 
     return distanceArr;
 }
@@ -355,17 +367,13 @@ SMALLTYPE* getDistanceFrom(Field curField, SMALLTYPE pos, bool isRobot){
  * @param y current y pos
  * @param distanceARR distance array
  * @param distance current distance
- * @param isRobot if this is is for robot finding ways
+ * @param robotIndex the robot index
  */
-void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance, bool isRobot){
-    if (isRobot){
-        Field orgField = Field();
-        curField.setTileInfo(x, y, orgField.getTileInfo(x, y));
-    }
-    if ((curField.getTileInfo(x, y) & 0x08) == 0x08) goDirection(curField, x, y - 1, distanceARR, distance + 1, 0x08, isRobot);
-    if ((curField.getTileInfo(x, y) & 0x04) == 0x04) goDirection(curField, x, y + 1, distanceARR, distance + 1, 0x04, isRobot);
-    if ((curField.getTileInfo(x, y) & 0x02) == 0x02) goDirection(curField, x - 1, y, distanceARR, distance + 1, 0x02, isRobot);
-    if ((curField.getTileInfo(x, y) & 0x01) == 0x01) goDirection(curField, x + 1, y, distanceARR, distance + 1, 0x01, isRobot);
+void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance){
+    if ((curField.getTileInfo(x, y) & 0x08) == 0x08) goDirection(curField, x, y - 1, distanceARR, distance + 1, 0x08);
+    if ((curField.getTileInfo(x, y) & 0x04) == 0x04) goDirection(curField, x, y + 1, distanceARR, distance + 1, 0x04);
+    if ((curField.getTileInfo(x, y) & 0x02) == 0x02) goDirection(curField, x - 1, y, distanceARR, distance + 1, 0x02);
+    if ((curField.getTileInfo(x, y) & 0x01) == 0x01) goDirection(curField, x + 1, y, distanceARR, distance + 1, 0x01);
 }
 
 /**
@@ -380,13 +388,13 @@ void getDistance(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceAR
  * @param distanceARR distance array
  * @param distance current distance
  * @param direction direction in hex format
- * @param isRobot if this is is for robot finding ways
+ * @param robotIndex the robot index
  */
-void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance, SMALLTYPE direction, bool isRobot){
+void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceARR, SMALLTYPE distance, SMALLTYPE direction){
     if ((curField.getTileInfo(x, y) & direction) != direction) { // if not able to move into the direction anymore;
         if (distanceARR[16 * y + x] > distance){
             distanceARR[16 * y + x] = distance; // do relaxation
-            getDistance(curField, x, y, distanceARR, distance, isRobot);
+            getDistance(curField, x, y, distanceARR, distance);
         }
         else{
             return;
@@ -395,16 +403,16 @@ void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceAR
     else{
         switch (direction) {
             case 0x08: // up
-                goDirection(curField, x, y - 1, distanceARR, distance, direction, isRobot);
+                goDirection(curField, x, y - 1, distanceARR, distance, direction);
                 break;
             case 0x04: // dn
-                goDirection(curField, x, y + 1, distanceARR, distance, direction, isRobot);
+                goDirection(curField, x, y + 1, distanceARR, distance, direction);
                 break;
             case 0x02: // left
-                goDirection(curField, x - 1, y, distanceARR, distance, direction, isRobot);
+                goDirection(curField, x - 1, y, distanceARR, distance, direction);
                 break;
             case 0x01: // right
-                goDirection(curField, x + 1, y, distanceARR, distance, direction, isRobot);
+                goDirection(curField, x + 1, y, distanceARR, distance, direction);
         }
     }
 }
@@ -414,10 +422,10 @@ void goDirection(Field curField, SMALLTYPE x, SMALLTYPE y, SMALLTYPE* distanceAR
  * @param curField current field to look at
  * @param spPos starting position
  * @param epPos ending position
- * @param isRobot if this is is for robot finding ways
+ * @param robotIndex the robot index
  * @return returns true if can reach, else false.
  */
-SMALLTYPE cntReachFromTo(Field curField, SMALLTYPE spPos, SMALLTYPE epPos, bool isRobot){
-    SMALLTYPE* distanceArr = getDistanceFrom(curField, spPos, isRobot);
+SMALLTYPE cntReachFromTo(Field curField, SMALLTYPE spPos, SMALLTYPE epPos){
+    SMALLTYPE* distanceArr = getDistanceFrom(curField, spPos);
     return distanceArr[16 * (epPos & 0x0F) + ((epPos >> 4) & 0x0F)];
 }

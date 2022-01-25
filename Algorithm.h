@@ -20,12 +20,7 @@
 
 #define SMALLTYPE uint8_t
 
-typedef struct movementResult_{
-    SMALLTYPE robotOrder[3];
-    SMALLTYPE robotDestination[3];
-    SMALLTYPE movementCount[3];
-    Field field[3];
-}movementResult;
+
 
 /**
  * An algorithm class for polymorphism
@@ -52,6 +47,54 @@ public:
     void generateFieldDFS(Field, SMALLTYPE, SMALLTYPE);
 };
 
+class Movements{
+public:
+    struct robotMovements{
+        SMALLTYPE movedRobot;
+        SMALLTYPE moveCount = 255;
+        SMALLTYPE destination;
+        Field field;
+    };
+
+    robotMovements mvs[3];
+    SMALLTYPE curDepth = 0;
+    SMALLTYPE totalMoves = 0;
+    SMALLTYPE canMove = 0;
+
+    SMALLTYPE getMovedRobot(SMALLTYPE);
+    SMALLTYPE getMoveCount(SMALLTYPE);
+    SMALLTYPE getDestination(SMALLTYPE);
+    SMALLTYPE getTotalMoves();
+    SMALLTYPE getCanMove();
+    SMALLTYPE isUsedRobot(SMALLTYPE);
+    SMALLTYPE getDepth();
+
+    Field getField(SMALLTYPE);
+
+
+    void setMovedRobot(SMALLTYPE);
+    void setMoveCount(SMALLTYPE);
+    void setDestination(SMALLTYPE);
+    void addTotalMoves(SMALLTYPE);
+    void setCanMove(SMALLTYPE);
+    void setField(Field);
+
+    void nextDepth();
+    void printMovements();
+};
+
+class Visited{
+private:
+    SMALLTYPE* visited;
+public:
+    Visited(){
+        visited = (SMALLTYPE*) malloc((sizeof(SMALLTYPE)) * 256);
+        for(uint16_t i = 0 ; i < 256 ; i++) visited[i] = 0;
+    }
+    void setVisited(SMALLTYPE);
+    SMALLTYPE getVisited(SMALLTYPE);
+};
+
 class neighborAlgorithm{
 public:
     SMALLTYPE spPos;
@@ -72,7 +115,9 @@ public:
     void findPath();
     void findNeighborPath(SMALLTYPE);
     SMALLTYPE placeNeighbors(SMALLTYPE);
-    movementResult findWay(SMALLTYPE, SMALLTYPE, SMALLTYPE);
+    Movements findWay(SMALLTYPE, SMALLTYPE, SMALLTYPE, Visited);
 };
+
+
 
 void runAlgorithm(Algorithm*, SMALLTYPE, SMALLTYPE);

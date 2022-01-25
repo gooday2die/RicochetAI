@@ -48,25 +48,97 @@ void randomAlgorithm::generateFieldDFS(Field curField, SMALLTYPE curDepth, SMALL
     }
 }
 
+SMALLTYPE Movements::getMovedRobot(SMALLTYPE depth){
+    return mvs[depth].movedRobot;
+}
+SMALLTYPE Movements::getMoveCount(SMALLTYPE depth){
+    return mvs[depth].moveCount;
+}
+SMALLTYPE Movements::getDestination(SMALLTYPE depth){
+    return mvs[depth].destination;
+}
+
+SMALLTYPE Movements::getTotalMoves() {
+    return totalMoves;
+}
+
+SMALLTYPE Movements::getCanMove() {
+    return canMove;
+}
+
+Field Movements::getField(SMALLTYPE depth){
+    return mvs[depth].field;
+}
+
+SMALLTYPE Movements::isUsedRobot(SMALLTYPE robotIndex){
+    for(SMALLTYPE i = 0 ; i < 3 ; i++){
+        if(mvs[i].movedRobot == robotIndex) return 1;
+    }
+    return 0;
+}
+
+SMALLTYPE Movements::getDepth() {
+    return curDepth;
+}
+
+SMALLTYPE Visited::getVisited(SMALLTYPE pos){
+    SMALLTYPE x = (pos >> 4) & 0x0F;
+    SMALLTYPE y = pos & 0x0F;
+
+    return visited[16 * y + x];
+}
+
+void Movements::setMovedRobot(SMALLTYPE robotIndex){
+    mvs[curDepth].movedRobot = robotIndex;
+}
+
+void Movements::setMoveCount(SMALLTYPE moveCount){
+    mvs[curDepth].moveCount = moveCount;
+}
+void Movements::setDestination(SMALLTYPE destination){
+    mvs[curDepth].destination = destination;
+}
+void Movements::setField(Field newField){
+    mvs[curDepth].field = newField;
+}
+
+void Movements::addTotalMoves(SMALLTYPE toAdd){
+    totalMoves += toAdd;
+}
+
+void Movements::setCanMove(SMALLTYPE can){
+    canMove = can;
+}
+
+void Movements::nextDepth() {
+    curDepth++;
+}
+
+void Visited::setVisited(SMALLTYPE pos){
+    SMALLTYPE x = (pos >> 4) & 0x0F;
+    SMALLTYPE y = pos & 0x0F;
+    visited[16 * y + x] = 1;
+}
+
+void Movements::printMovements() {
+    for(SMALLTYPE i = 0 ; i < curDepth ; i++){
+        printf("%d) Move Robot : %d to %x. Distance : %d\n", i, mvs[i].movedRobot, mvs[i].destination, mvs[i].moveCount);
+    }
+    printf("Total Move Count : %d\n", totalMoves);
+}
+
 /**
  * A member function for class neighborAlgorithm to find its path.
  */
 void neighborAlgorithm::findPath(){
-    //printf("SP : (%d, %d) --> EP : (%d, %d)\n", (spPos >> 4) & 0x0F, (spPos & 0x0F), (epPos >> 4) & 0x0F, (epPos & 0x0F));
-    //if (cntReachFromTo(curField, spPos, epPos) != 255) {
-    //    findPathFromTo(curField, spPos, epPos);
-    //}
-    //else {
-    //    printf("Cannot find any ways without moving other robots.\n");
-    //    findNeighborPath(epPos);
-    //}
-    movementResult a = findWay(0, epPos, 2);
-    for(SMALLTYPE i = 0 ; i < 3 ; i++){
-        printf("RESULT %d , MOVE CNT : %d, ROBOT ORDER %d, ROBOT DESTINATION %x\n", i, a.movementCount[i], a.robotOrder[i], a.robotDestination[i]);
-    }
-    //printf("COUNT : %d\n", a.movementCount[0]);
-    //printf("ROBOT : %d to %x\n", a.robotOrder[0], a.robotDestination[0]);
-    //printf("MOVING SP to EP: %d\n", cntReachFromTo(a.field[0], spPos, epPos));
+    Movements m;
+    Visited v;
+    m = findWay(0, epPos, 2, v);
+    printf("\n\n\n");
+    m.printMovements();
+    printf("Depth : %d\n", m.curDepth);
+    //  m.getField(m.getDepth() - 1).printField();
+    //findPathFromTo(m.getField(m.getDepth() - 1), spPos, epPos);
 }
 
 
@@ -159,75 +231,108 @@ SMALLTYPE neighborAlgorithm::placeNeighbors(SMALLTYPE pos) {
     return 255;
 }
 
-movementResult neighborAlgorithm::findWay(SMALLTYPE curDepth, SMALLTYPE curPos, SMALLTYPE maxDepth) {
-    //printf("DEPTH : %d\n", curDepth);
+Movements neighborAlgorithm::findWay(SMALLTYPE curDepth, SMALLTYPE curPos, SMALLTYPE maxDepth, Visited v) {
     if (curDepth == maxDepth) {
-        movementResult result;
+        Movements result = Movements();
         SMALLTYPE minCnt = 255; // minimum count.
-        result.movementCount[curDepth - maxDepth] = 255; // set it unreachable initially.
-        for (SMALLTYPE i = 0; i < 3; i++) result.robotOrder[i] = 255;
-        //printf("Currently trying to visit %x with robot\n", curPos);
-
-        for (SMALLTYPE i = 0; i < 3; i++) {
+        for (SMALLTYPE i = 0 ; i < 3; i++) {
             Field newField = curField.removeRobot(i); // have to remove robot before moving
             SMALLTYPE curCnt = cntReachFromTo(newField, curField.robotArray[i], curPos);
             if (minCnt > curCnt) { // if we found curPos is reachable, record that.
-               printf("Can visit %x with Robot %d / Distance : %d\n", curPos, i, curCnt);
-
+               //printf("Can visit %x with Robot %d / Distance : %d\n", curPos, i, curCnt);
                 minCnt = curCnt;
-                result.movementCount[curDepth - maxDepth] = curCnt; // record min count of movements
-                result.robotDestination[curDepth - maxDepth] = curPos; // check destination of robot
-                result.robotOrder[curDepth - maxDepth] = i; // record current robot order
-                result.field[curDepth - maxDepth] = curField.removeRobot(
-                        i); // update the current field into the one that the robot moved.
-                result.field[curDepth - maxDepth].setRobot(i, curPos);
+                result.setMoveCount(curCnt);
+                result.setCanMove(minCnt != 255);
+                result.setMovedRobot(i);
+                result.setDestination(curPos);
+                newField.setRobot(i, curPos);
+                result.setField(newField);
+                result.addTotalMoves(curCnt);
+                v.setVisited(curPos);
             }
         }
+        printf("MAXDEPTH : visit %x with Robot %d, distance : %d\n", curPos, result.getMovedRobot(result.getDepth()),result.getMoveCount(result.getDepth()));
+        result.nextDepth();
+        printf("MAXDEPTH : Added Depth. Cur Depth : %d\n", result.getDepth());
+
         return result;
-    } else { // if depth is not 3
-        movementResult resultArr[4]; // gather all 4 directions
-        for (SMALLTYPE i = 0; i < 4; i++) resultArr[i].movementCount[curDepth - 1] = 255; // init with unreachable
+
+    } else { // if depth is not maxDepth
+        printf("DEPTH %d\n", curDepth);
+        Movements resultArr[4]; // gather all 4 directions
         if ((curPos & 0x0F) >= 1) { // if can go up, go up
-            resultArr[0] = findWay(curDepth + 1, (((curPos & 0x0F) - 1) | (curPos & 0xF0)), maxDepth); // up
+            resultArr[0] = findWay(curDepth + 1, (((curPos & 0x0F) - 1) | (curPos & 0xF0)), maxDepth, v); // up
         }
         if ((curPos & 0x0F) < 15) {  // if can go dn, go dn
-            resultArr[1] = findWay(curDepth + 1, (((curPos & 0x0F) + 1) | (curPos & 0xF0)), maxDepth); // dn
+            resultArr[1] = findWay(curDepth + 1, (((curPos & 0x0F) + 1) | (curPos & 0xF0)), maxDepth, v); // dn
         }
         if (((curPos >> 4) & 0x0F) >= 1) {  // if can go left, go left
             resultArr[2] = findWay(curDepth + 1,
-                                   ((curPos & 0x0F) | ((((curPos >> 4) & 0x0F) - 1) << 4) & 0xF0), maxDepth); // left
+                                   ((curPos & 0x0F) | (((((curPos >> 4) & 0x0F) - 1) << 4) & 0xF0)), maxDepth, v); // left
         }
         if (((curPos >> 4) & 0x0F) < 15) {  // if can go right, go right.
             resultArr[3] = findWay(curDepth + 1,
-                                   ((curPos & 0x0F) | ((((curPos >> 4) & 0x0F) + 1) << 4) & 0xF0), maxDepth); // right
+                                   ((curPos & 0x0F) | (((((curPos >> 4) & 0x0F) + 1) << 4) & 0xF0)), maxDepth, v); // right
         }
 
-        SMALLTYPE smallestIndex = 0; // set smallest index as 0
-        uint16_t totalArr[4]; // to save total values and to compare
-        for(SMALLTYPE i = 0 ; i < 4 ; i++){ // for all results
-            if (resultArr[i].movementCount[maxDepth - curDepth - 1] != 255){ // if it is reachable
-                Field newField; // make new field
-                for(SMALLTYPE j = 0 ; j < 3 ; j++){ // for all robots
-                    SMALLTYPE curBest = 255;
-                    if (j != resultArr[i].robotOrder[j]){ // if not used before
-                        newField = resultArr[i].field[maxDepth - curDepth - 1].removeRobot(j); // make new field
-                        SMALLTYPE count = cntReachFromTo(newField, j, curPos); // get count
-                        printf("RECUR: Can visit %x with Robot %d / Distance : %d\n", curPos, j, count);
-                        if (curBest > count){ // if current count is smaller than before
-                            resultArr[i].movementCount[maxDepth - curDepth] = count; // update
-                            resultArr[i].robotOrder[maxDepth - curDepth] = j;
-                            resultArr[i].robotDestination[maxDepth - curDepth] = curPos;
-                            newField.setRobot(j, curPos);
-                            resultArr[i].field[maxDepth - curDepth] = newField;
+        SMALLTYPE disableCnt = 0;
+        Movements result;
+        for(SMALLTYPE i = 0 ; i < 4 ; i++) disableCnt += !(resultArr[i].getCanMove());
+        if (disableCnt == 4){
+            result.setCanMove(0);
+            printf("Cannot reach %x\n", curPos);
+            return result;
+        }
+
+        for(SMALLTYPE i = 0 ; i < 4 ; i++) { // for all results
+            if ((resultArr[i].getCanMove()) && !(v.getVisited(curPos))) {
+                Field newField;
+                //v.setVisited(curPos);
+                SMALLTYPE curBest = 255;
+                SMALLTYPE bestRobot = 0;
+                for (SMALLTYPE j = 0; j < 3; j++) {
+                    if (!resultArr[i].isUsedRobot(j)) {
+                        printf("Recursion %d : Using robot :%d to %x\n", curDepth, j, resultArr[i].getDestination(resultArr[i].getDepth()- 1));
+                        newField = resultArr[i].getField(resultArr[i].getDepth() - 1);
+                        newField.removeRobot(j);
+                        SMALLTYPE count = cntReachFromTo(newField, j, curPos);
+                        if (count != 255) {
+                            if (curBest > count) {
+                                bestRobot = j;
+                                curBest = count;
+                                resultArr[i].setCanMove(count != 255);
+                                resultArr[i].setDestination(curPos);
+                                resultArr[i].setMoveCount(count);
+                                newField.setRobot(j, curPos);
+                                resultArr[i].setField(newField);
+
+                            }
                         }
                     }
                 }
+                resultArr[i].addTotalMoves(resultArr[i].getMoveCount(resultArr[i].getDepth()));
+                resultArr[i].setMovedRobot(bestRobot);
+                resultArr[i].nextDepth();
+
+                printf("Recursion %d : Added Depth. Cur Depth : %d\n", curDepth, resultArr[i].getDepth());
             }
-            for (SMALLTYPE j = 0 ; j < 3 ; j++) totalArr[i] +=  resultArr[i].movementCount[j];
-            if (totalArr[smallestIndex] > totalArr[i]) smallestIndex = i;
-            //printf("RESULT %d : total %d\n", i, totalArr[i]);
         }
-        //printf("Smallest Index: %d, Value : %d", smallestIndex, totalArr[smallestIndex]);
+
+        SMALLTYPE smallestIndex = 0;
+        SMALLTYPE smallestValue = resultArr[smallestIndex].getTotalMoves();
+        for(SMALLTYPE i = 0 ; i < 4 ; i++)
+            if(resultArr[i].getTotalMoves() != 0) smallestIndex = i;
+        for(SMALLTYPE i = 0 ; i < 4 ; i++) {
+            if((smallestValue > resultArr[i].getTotalMoves()) && resultArr[i].getCanMove()){
+                smallestIndex = i;
+                printf("Recursion %d : Result %d - total moves %d\n", curDepth, i, resultArr[i].getTotalMoves());
+
+            }
+        }
+        printf("Choosing result %d\n", smallestIndex);
+        printf("Recursion %d : Moving Robot %d to %x. Distance %d\n", curDepth, resultArr[smallestIndex].getMovedRobot(resultArr[smallestIndex].getDepth() - 1),
+               resultArr[smallestIndex].getDestination(resultArr[smallestIndex].getDepth() - 1), resultArr[smallestIndex].getMoveCount(resultArr[smallestIndex].getDepth()) - 1);
+        resultArr[smallestIndex].addTotalMoves(resultArr[smallestIndex].getMoveCount(resultArr[smallestIndex].getDepth() - 1));
         return resultArr[smallestIndex];
     }
 }

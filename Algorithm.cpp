@@ -60,7 +60,7 @@ void neighborAlgorithm::findPath(){
     //    printf("Cannot find any ways without moving other robots.\n");
     //    findNeighborPath(epPos);
     //}
-    movementResult a = findWay(0, epPos, 1);
+    movementResult a = findWay(0, epPos, 2);
     for(SMALLTYPE i = 0 ; i < 3 ; i++){
         printf("RESULT %d , MOVE CNT : %d, ROBOT ORDER %d, ROBOT DESTINATION %x\n", i, a.movementCount[i], a.robotOrder[i], a.robotDestination[i]);
     }
@@ -164,7 +164,7 @@ movementResult neighborAlgorithm::findWay(SMALLTYPE curDepth, SMALLTYPE curPos, 
     if (curDepth == maxDepth) {
         movementResult result;
         SMALLTYPE minCnt = 255; // minimum count.
-        result.movementCount[curDepth - 1] = 255; // set it unreachable initially.
+        result.movementCount[curDepth - maxDepth] = 255; // set it unreachable initially.
         for (SMALLTYPE i = 0; i < 3; i++) result.robotOrder[i] = 255;
         //printf("Currently trying to visit %x with robot\n", curPos);
 
@@ -172,15 +172,15 @@ movementResult neighborAlgorithm::findWay(SMALLTYPE curDepth, SMALLTYPE curPos, 
             Field newField = curField.removeRobot(i); // have to remove robot before moving
             SMALLTYPE curCnt = cntReachFromTo(newField, curField.robotArray[i], curPos);
             if (minCnt > curCnt) { // if we found curPos is reachable, record that.
-               //printf("Can visit %x with Robot %d / Distance : %d\n", curPos, i, curCnt);
+               printf("Can visit %x with Robot %d / Distance : %d\n", curPos, i, curCnt);
 
                 minCnt = curCnt;
-                result.movementCount[curDepth - 1] = curCnt; // record min count of movements
-                result.robotDestination[curDepth - 1] = curPos; // check destination of robot
-                result.robotOrder[curDepth - 1] = i; // record current robot order
-                result.field[curDepth - 1] = curField.removeRobot(
+                result.movementCount[curDepth - maxDepth] = curCnt; // record min count of movements
+                result.robotDestination[curDepth - maxDepth] = curPos; // check destination of robot
+                result.robotOrder[curDepth - maxDepth] = i; // record current robot order
+                result.field[curDepth - maxDepth] = curField.removeRobot(
                         i); // update the current field into the one that the robot moved.
-                result.field[curDepth - 1].setRobot(i, curPos);
+                result.field[curDepth - maxDepth].setRobot(i, curPos);
             }
         }
         return result;
@@ -204,16 +204,17 @@ movementResult neighborAlgorithm::findWay(SMALLTYPE curDepth, SMALLTYPE curPos, 
 
         SMALLTYPE smallestIndex = 0; // set smallest index as 0
         uint16_t totalArr[4]; // to save total values and to compare
-        for(SMALLTYPE i = 0 ; i < 4 ; i++){
-            if (resultArr[i].movementCount[maxDepth - curDepth - 1] != 255){
-                Field newField;
-                for(SMALLTYPE j = 0 ; j < 3 ; j++){
+        for(SMALLTYPE i = 0 ; i < 4 ; i++){ // for all results
+            if (resultArr[i].movementCount[maxDepth - curDepth - 1] != 255){ // if it is reachable
+                Field newField; // make new field
+                for(SMALLTYPE j = 0 ; j < 3 ; j++){ // for all robots
                     SMALLTYPE curBest = 255;
-                    if (j != resultArr[i].robotOrder[j]){
-                        newField = resultArr[i].field[maxDepth - curDepth - 1].removeRobot(j);
-                        SMALLTYPE count = cntReachFromTo(newField, j, curPos);
-                        if (curBest > count){
-                            resultArr[i].movementCount[maxDepth - curDepth] = count;
+                    if (j != resultArr[i].robotOrder[j]){ // if not used before
+                        newField = resultArr[i].field[maxDepth - curDepth - 1].removeRobot(j); // make new field
+                        SMALLTYPE count = cntReachFromTo(newField, j, curPos); // get count
+                        printf("RECUR: Can visit %x with Robot %d / Distance : %d\n", curPos, j, count);
+                        if (curBest > count){ // if current count is smaller than before
+                            resultArr[i].movementCount[maxDepth - curDepth] = count; // update
                             resultArr[i].robotOrder[maxDepth - curDepth] = j;
                             resultArr[i].robotDestination[maxDepth - curDepth] = curPos;
                             newField.setRobot(j, curPos);

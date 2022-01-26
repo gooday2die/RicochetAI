@@ -270,7 +270,8 @@ void findPathFromTo(Field curField, SMALLTYPE SPpos, SMALLTYPE EPpos){
 
         while (1){
             nextIter: // used a very bad expression, goto expression.
-            if (distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)] == 0) break;
+            //if (distanceArr[(curPOS & 0x0F) * 16 + ((curPOS >> 4) & 0x0F)] < 1) break;
+            if(curDistance == 1) break;
             if ((curField.getTileInfo(((curPOS >> 4) & 0x0F), curPOS & 0x0F) & 0x08) == 0x08) // go up if you can
                 for (SMALLTYPE i = (curPOS & 0x0F) ; i >= 0 ; i--) {
                     if (((curField.getTileInfo((curPOS >> 4) & 0x0F, i) & 0x08) == 0) || (distanceArr[i * 16 + ((curPOS >> 4) & 0x0F)] == (curDistance - 1))){

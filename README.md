@@ -16,17 +16,17 @@ I get the question that, it's 21st century and we got `128GB` of RAM in computer
 
 ## Algorithm
 ### My personal algorithm is like following. 
-![n1](http://fs.gooday2die.net/pic/n1.PNG)
+![n1](https://raw.githubusercontent.com/gooday2die/RicochetAI/main/pic/n1.PNG)
 - Let's suppose a field that looks like this. It is **NOT** possible for the robot in (1,0) to reach (2,5) without help of other robots. Thus, we have to move robots.
 
-![n2](http://fs.gooday2die.net/pic/n2.PNG)
+![n2](https://raw.githubusercontent.com/gooday2die/RicochetAI/main/pic/n2.PNG)
 - Let's assume that there are some robots placed 'right neighbor' to the destination (2,5). By 'right neighbor' it means that those neighbors are UP, DOWN, LEFT, RIGHT positions of destination position. Meaning that there would be (1,5) , (3,5) , (2,4) , (2,6). Let's assume if it is possible to reach destination with the help of that robot. The answer would be?
 - **Yes. You can visit (2,5) with help of (3,5).**
 - As you can see, we assumed that there is a robot placed in (3,5) and with help of that virtual robot, it is possible to reach destination. However, as you know, that virtual robot is **NOT** there yet. 
 - Let's find if robot 0, 1, 2 can visit (3,5) itself. The answer would be?
 - **NO. Not a single robot 0, 1, 2 can visit (3,5) without help of others.** 
 
-![n3](http://fs.gooday2die.net/pic/n3.PNG)
+![n3](https://raw.githubusercontent.com/gooday2die/RicochetAI/main/pic/n3.PNG)
 - Then let's assume if there is 'right neighbor' virtual block near (3,5). That would be (2,5), (4,5), (3,4), (3,6). 
 - With help of its neighbor robots, is it possible to put any other robots into (3,5)? The answer would be?
 - **Yes, With help of (4,5) it is possible to set a single robot into (3,5)**

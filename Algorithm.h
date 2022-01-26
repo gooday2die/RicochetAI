@@ -50,7 +50,7 @@ public:
 class Movements{
 public:
     struct robotMovements{
-        SMALLTYPE movedRobot;
+        SMALLTYPE movedRobot = 4;
         SMALLTYPE moveCount = 255;
         SMALLTYPE destination;
         Field field;
@@ -68,6 +68,7 @@ public:
     SMALLTYPE getCanMove();
     SMALLTYPE isUsedRobot(SMALLTYPE);
     SMALLTYPE getDepth();
+    SMALLTYPE getVisited(SMALLTYPE);
 
     Field getField(SMALLTYPE);
 
@@ -80,7 +81,7 @@ public:
     void setField(Field);
 
     void nextDepth();
-    void printMovements();
+    void printMovements(Field);
 };
 
 class Visited{
@@ -109,13 +110,13 @@ public:
         curField.printField();
 
         printf("Running Algorithm\n");
-        epPos = 0x25;
+        epPos = 0x25 ;
         spPos = 0x10;
     }
     void findPath();
     void findNeighborPath(SMALLTYPE);
     SMALLTYPE placeNeighbors(SMALLTYPE);
-    Movements findWay(SMALLTYPE, SMALLTYPE, SMALLTYPE, Visited);
+    Movements findWay(SMALLTYPE, SMALLTYPE, SMALLTYPE, Visited, SMALLTYPE, SMALLTYPE);
 };
 
 
